@@ -1,18 +1,12 @@
 package com.example.letssopt
 
-import android.R.attr.text
 import android.app.Activity
 import android.content.Intent
-import android.graphics.Color.red
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -20,9 +14,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CheckboxDefaults.colors
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -37,21 +31,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import com.example.letssopt.ui.theme.LETSSOPTTheme
 
-class MainActivity : ComponentActivity() {
+class SignUpActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             LETSSOPTTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
+                    Greeting2(
                         name = "Android",
                         modifier = Modifier.padding(innerPadding)
                     )
@@ -62,29 +54,25 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
+fun Greeting2(name: String, modifier: Modifier = Modifier) {
     var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var registeredEmail by remember { mutableStateOf("") }
-    var registeredPassword by remember { mutableStateOf("") }
+    var signUpEmail by remember { mutableStateOf("") }
+    var signUpPassword by remember { mutableStateOf("") }
+    var passwordcheck by remember { mutableStateOf("") }
     val context = LocalContext.current
-    var showDialog by remember { mutableStateOf(false) }
-    val signUpLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val data = result.data
-            registeredEmail = data?.getStringExtra("registered_email") ?: ""
-            registeredPassword = data?.getStringExtra("registered_password") ?: ""
-            Toast.makeText(context, "회원가입 완료! 로그인 해주세요.", Toast.LENGTH_SHORT).show()
-        }
+    var currentContext = context
+    while (currentContext is android.content.ContextWrapper && currentContext !is Activity) {
+        currentContext = currentContext.baseContext
     }
+    val activity = currentContext as? Activity
+
 
     Box(
         modifier = modifier
             .fillMaxSize()
             .background(Color(0xFF141414))
-    ) {
+    )
+    {
 
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -99,9 +87,8 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
                 modifier = Modifier.padding(top = 60.dp)
             )
 
-
             Text(
-                text = "이메일로 로그인",
+                text = "회원가입",
                 fontSize = 20.sp,
                 fontWeight = FontWeight(700),
                 color = Color(0xFFFFFFFF),
@@ -121,8 +108,8 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
             )
 
             TextField(
-                value = email,
-                onValueChange = { email = it },
+                value = signUpEmail,
+                onValueChange = { signUpEmail = it },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp)
@@ -151,8 +138,12 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
             )
 
             TextField(
-                value = password,
-                onValueChange = { password = it },
+                value = signUpPassword,
+                onValueChange = {
+                    if (it.length <= 12) {
+                        signUpPassword = it
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp)
@@ -160,7 +151,40 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
                 label = { Text("비밀번호를 입력하세요") },
                 placeholder = { Text("비밀번호") },
                 singleLine = true,
-                visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color(0xFF2A2A2A),
+                    unfocusedContainerColor = Color(0xFF2A2A2A),
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White
+                )
+            )
+
+            Spacer(modifier = Modifier.height(30.dp))
+
+            Text(
+                text = "비밀번호 확인",
+                fontSize = 14.sp,
+                fontWeight = FontWeight(400),
+                color = Color(0xFF999999),
+                modifier = Modifier
+                    .align(Alignment.Start)
+                    .padding(start = 20.dp)
+            )
+
+            TextField(
+                value = passwordcheck,
+                onValueChange = {
+                    if (it.length <= 12) {
+                        passwordcheck = it
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .height(52.dp),
+                label = { Text("비밀번호를 다시 입력하세요") },
+                placeholder = { Text("비밀번호 재입력") },
+                singleLine = true,
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color(0xFF2A2A2A),
                     unfocusedContainerColor = Color(0xFF2A2A2A),
@@ -171,31 +195,25 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
 
             Spacer(modifier = Modifier.weight(1f))
 
-            Text(
-                text = "아직 계정이 없으신가요? 회원가입",
-                fontSize = 14.sp,
-                fontWeight = FontWeight(400),
-                color = Color(0xFF999999),
-                modifier = Modifier
-                    .clickable {
-                        val intent = Intent(context, SignUpActivity::class.java)
-                        signUpLauncher.launch(intent)
-
-                    }
-                    .padding(bottom = 10.dp)
-            )
-
-
             Button(
                 onClick = {
-                    if (email.isNotEmpty() && email == registeredEmail && password == registeredPassword) {
-                        showDialog = true
+                    if (signUpPassword.isNotEmpty() && signUpPassword == passwordcheck) {
+                        val resultIntent = Intent()
+                        resultIntent.putExtra("registered_email", signUpEmail)
+                        resultIntent.putExtra("registered_password", signUpPassword)
+                        activity?.setResult(Activity.RESULT_OK, resultIntent)
+                        activity?.finish()
                     } else {
-                        Toast.makeText(context, "이메일 또는 비밀번호가 일치하지 않습니다.", Toast.LENGTH_SHORT)
-                            .show()
+                        android.widget.Toast.makeText(
+                            context,
+                            "비밀번호가 일치하지 않습니다.",
+                            android.widget.Toast.LENGTH_SHORT
+                        ).show()
                     }
                 },
-                enabled = email.isNotBlank() && password.isNotBlank(),
+                enabled = signUpEmail.isNotBlank() && signUpPassword.isNotBlank() && passwordcheck.isNotBlank()
+                        && android.util.Patterns.EMAIL_ADDRESS.matcher(signUpEmail).matches() &&
+                        signUpPassword.length >= 8 && passwordcheck.length >= 8,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp)
@@ -207,37 +225,21 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
                     disabledContainerColor = Color(0xFF333333),
                     disabledContentColor = Color(0xFF666666)
                 )
-            ) {
-                Text(text = "로그인")
+            )
+            {
+                Text(text = "회원가입")
             }
         }
 
-        if (showDialog) {
-            Dialog(
-                onDismissRequest = { showDialog = false }
-            ) {
-                Column(
-                    modifier = Modifier
-                        .background(Color.White)
-                        .padding(20.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text("로그인 되었습니다!", modifier = Modifier.padding(bottom = 16.dp))
-                    Button(
-                        onClick = { showDialog = false }
-                    ) {
-                        Text("확인")
-                    }
-                }
-            }
-        }
+
     }
 }
 
+
 @Preview(showBackground = true)
 @Composable
-fun GreetingPreview() {
+fun GreetingPreview2() {
     LETSSOPTTheme {
-        Greeting("Android")
+        Greeting2("Android")
     }
 }
