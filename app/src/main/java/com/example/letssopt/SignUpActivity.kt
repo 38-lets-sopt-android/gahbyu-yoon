@@ -55,7 +55,6 @@ class SignUpActivity : ComponentActivity() {
 
 @Composable
 fun Greeting2(name: String, modifier: Modifier = Modifier) {
-    var email by remember { mutableStateOf("") }
     var signUpEmail by remember { mutableStateOf("") }
     var signUpPassword by remember { mutableStateOf("") }
     var passwordcheck by remember { mutableStateOf("") }
