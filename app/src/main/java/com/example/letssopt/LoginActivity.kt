@@ -43,6 +43,13 @@ import com.example.letssopt.ui.theme.LETSSOPTTheme
 class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val prefManager = PreferenceManager(this)
+        if (prefManager.isLoggedIn()) {
+            val intent = Intent(this, ScreenActivity::class.java)
+            startActivity(intent)
+            finish()
+            return
+        }
         enableEdgeToEdge()
         setContent {
             LETSSOPTTheme {
@@ -75,6 +82,7 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
             Toast.makeText(context, "회원가입 완료! 로그인 해주세요.", Toast.LENGTH_SHORT).show()
         }
     }
+    val prefManager = remember { PreferenceManager(context) }
 
     Box(
         modifier = modifier
@@ -185,7 +193,10 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
             Button(
                 onClick = {
                     if (email.isNotEmpty() && email == registeredEmail && password == registeredPassword) {
-                        showDialog = true
+                        prefManager.setLoggedIn(true)
+                        val intent = Intent(context, ScreenActivity::class.java)
+                        context.startActivity(intent)
+                        (context as? Activity)?.finish()
                     } else {
                         Toast.makeText(context, "이메일 또는 비밀번호가 일치하지 않습니다.", Toast.LENGTH_SHORT)
                             .show()
@@ -229,6 +240,8 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
         }
     }
 }
+
+
 
 @Preview(showBackground = true)
 @Composable
