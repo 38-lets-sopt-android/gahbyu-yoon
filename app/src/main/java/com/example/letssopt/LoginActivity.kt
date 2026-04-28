@@ -45,7 +45,7 @@ class LoginActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val prefManager = PreferenceManager(this)
         if (prefManager.isLoggedIn()) {
-            val intent = Intent(this, ScreenActivity::class.java)
+            val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)
             finish()
             return
@@ -194,7 +194,7 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
                 onClick = {
                     if (email.isNotEmpty() && email == registeredEmail && password == registeredPassword) {
                         prefManager.setLoggedIn(true)
-                        val intent = Intent(context, ScreenActivity::class.java)
+                        val intent = Intent(context, MainActivity::class.java)
                         context.startActivity(intent)
                         (context as? Activity)?.finish()
                     } else {
@@ -245,7 +245,7 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
 
 @Preview(showBackground = true)
 @Composable
-fun GreetingPreview() {
+private fun LoginScreenPreview() {
     LETSSOPTTheme {
         Greeting("Android")
     }

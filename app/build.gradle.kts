@@ -52,6 +52,8 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.compose.foundation)
+    implementation(libs.androidx.compose.runtime)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -62,4 +64,5 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
     implementation("io.coil-kt:coil-compose:2.6.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.5")
 }

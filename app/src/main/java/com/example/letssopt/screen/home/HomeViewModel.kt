@@ -1,11 +1,13 @@
-package com.example.letssopt
+package com.example.letssopt.screen.home
 
 import androidx.lifecycle.ViewModel
+import com.example.letssopt.R
+import com.example.letssopt.model.ContentItem
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-class MainViewModel : ViewModel() {
+class HomeViewModel : ViewModel() {
 
     private val _sections = MutableStateFlow<List<Pair<String, List<ContentItem>>>>(emptyList())
     val sections: StateFlow<List<Pair<String, List<ContentItem>>>> = _sections.asStateFlow()
