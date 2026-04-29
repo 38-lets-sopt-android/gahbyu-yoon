@@ -58,16 +58,16 @@ fun MainScreen( modifier: Modifier = Modifier ) {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = `BottomNavItem`.Main.route,
+            startDestination = BottomNavItem.Main.route,
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(BottomNavItem.Main.route) {
                 HomeScreen()
             }
-            composable(`BottomNavItem`.Purchase.route) { TextScreen("개별구매 화면") }
-            composable(`BottomNavItem`.Webtoon.route) { TextScreen("웹툰 화면") }
-            composable(`BottomNavItem`.Search.route) { TextScreen("찾기 화면") }
-            composable(`BottomNavItem`.Library.route) { LibraryScreen() }
+            composable(BottomNavItem.Purchase.route) { TextScreen("개별구매 화면") }
+            composable(BottomNavItem.Webtoon.route) { TextScreen("웹툰 화면") }
+            composable(BottomNavItem.Search.route) { TextScreen("찾기 화면") }
+            composable(BottomNavItem.Library.route) { LibraryScreen() }
         }
     }
 }

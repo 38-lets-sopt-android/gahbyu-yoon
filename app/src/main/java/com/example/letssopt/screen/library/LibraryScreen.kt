@@ -21,22 +21,21 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale.Companion.Crop
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.example.letssopt.R
 
 @Composable
-fun LibraryScreen() {
-    val myPhotos = listOf(
-        R.drawable.love_,
-        R.drawable.stranger_5,
-        R.drawable.hail_,
-        R.drawable.love_
-    )
+fun LibraryScreen(viewModel: LibraryViewModel = viewModel()){
+
+    val myPhotos by viewModel.myPhotos.collectAsStateWithLifecycle()
+
 
     Column(
         modifier = Modifier
