@@ -3,9 +3,11 @@ package com.example.letssopt
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,16 +18,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CheckboxDefaults.colors
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -34,18 +33,26 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.letssopt.ui.theme.LETSSOPTTheme
+import kotlinx.coroutines.flow.collectLatest
 
 class SignUpActivity : ComponentActivity() {
+
+    private val viewModel: SignUpViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             LETSSOPTTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting2(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
+                Scaffold(
+                    modifier = Modifier.fillMaxSize()
+                ) { innerPadding ->
+
+                    SignUpScreen(
+                        modifier = Modifier.padding(innerPadding),
+                        viewModel = viewModel
                     )
                 }
             }
@@ -54,16 +61,47 @@ class SignUpActivity : ComponentActivity() {
 }
 
 @Composable
-fun Greeting2(name: String, modifier: Modifier = Modifier) {
-    var signUpEmail by remember { mutableStateOf("") }
-    var signUpPassword by remember { mutableStateOf("") }
-    var passwordcheck by remember { mutableStateOf("") }
+fun SignUpScreen(
+    modifier: Modifier = Modifier,
+    viewModel: SignUpViewModel = viewModel()
+) {
+    val signUpEmail by viewModel.email
+    val signUpPassword by viewModel.password
+    val passwordcheck by viewModel.passwordCheck
     val context = LocalContext.current
-    var currentContext = context
-    while (currentContext is android.content.ContextWrapper && currentContext !is Activity) {
-        currentContext = currentContext.baseContext
+    val activity = context as? Activity
+
+    LaunchedEffect(Unit) {
+        viewModel.signUpEvent.collectLatest { event ->
+            when (event) {
+                is SignUpEvent.SignUpSuccess -> {
+                    val resultIntent = Intent().apply {
+                        putExtra(
+                            "registered_email",
+                            event.email
+                        )
+                        putExtra(
+                            "registered_password",
+                            event.password
+                        )
+                    }
+                    activity?.setResult(
+                        Activity.RESULT_OK,
+                        resultIntent
+                    )
+                    activity?.finish()
+                }
+
+                is SignUpEvent.ShowToast -> {
+                    Toast.makeText(
+                        context,
+                        event.message, Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }
     }
-    val activity = currentContext as? Activity
+
 
 
     Box(
@@ -108,7 +146,7 @@ fun Greeting2(name: String, modifier: Modifier = Modifier) {
 
             TextField(
                 value = signUpEmail,
-                onValueChange = { signUpEmail = it },
+                onValueChange = { viewModel.updateEmail(it) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp)
@@ -140,7 +178,7 @@ fun Greeting2(name: String, modifier: Modifier = Modifier) {
                 value = signUpPassword,
                 onValueChange = {
                     if (it.length <= 12) {
-                        signUpPassword = it
+                        viewModel.updatePassword(it)
                     }
                 },
                 modifier = Modifier
@@ -174,7 +212,7 @@ fun Greeting2(name: String, modifier: Modifier = Modifier) {
                 value = passwordcheck,
                 onValueChange = {
                     if (it.length <= 12) {
-                        passwordcheck = it
+                        viewModel.updatePasswordCheck(it)
                     }
                 },
                 modifier = Modifier
@@ -196,23 +234,9 @@ fun Greeting2(name: String, modifier: Modifier = Modifier) {
 
             Button(
                 onClick = {
-                    if (signUpPassword.isNotEmpty() && signUpPassword == passwordcheck) {
-                        val resultIntent = Intent()
-                        resultIntent.putExtra("registered_email", signUpEmail)
-                        resultIntent.putExtra("registered_password", signUpPassword)
-                        activity?.setResult(Activity.RESULT_OK, resultIntent)
-                        activity?.finish()
-                    } else {
-                        android.widget.Toast.makeText(
-                            context,
-                            "비밀번호가 일치하지 않습니다.",
-                            android.widget.Toast.LENGTH_SHORT
-                        ).show()
-                    }
+                    viewModel.signUp()
                 },
-                enabled = signUpEmail.isNotBlank() && signUpPassword.isNotBlank() && passwordcheck.isNotBlank()
-                        && android.util.Patterns.EMAIL_ADDRESS.matcher(signUpEmail).matches() &&
-                        signUpPassword.length >= 8 && passwordcheck.length >= 8,
+                enabled = viewModel.isSignUpValid(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp)
@@ -237,8 +261,7 @@ fun Greeting2(name: String, modifier: Modifier = Modifier) {
 
 @Preview(showBackground = true)
 @Composable
-fun GreetingPreview2() {
+fun SignUpActivityPreview() {
     LETSSOPTTheme {
-        Greeting2("Android")
     }
 }
