@@ -9,6 +9,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -38,15 +39,18 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.letssopt.ui.theme.LETSSOPTTheme
 
 class LoginActivity : ComponentActivity() {
+    private val viewModel: LoginViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val prefManager = PreferenceManager(this)
+
         if (prefManager.isLoggedIn()) {
-            val intent = Intent(this, MainActivity::class.java)
-            startActivity(intent)
+            startActivity(Intent(this, MainActivity::class.java))
             finish()
             return
         }
@@ -54,9 +58,10 @@ class LoginActivity : ComponentActivity() {
         setContent {
             LETSSOPTTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
+                    LoginScreen(
+                        modifier = Modifier.padding(innerPadding),
+                        viewModel = viewModel,
+                        prefManager = prefManager
                     )
                 }
             }
@@ -65,13 +70,21 @@ class LoginActivity : ComponentActivity() {
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+fun LoginScreen(
+    modifier: Modifier = Modifier,
+    viewModel: LoginViewModel = viewModel(),
+    prefManager: PreferenceManager
+) {
+    val context = LocalContext.current
+
+    val email by viewModel.email
+    val password by viewModel.password
+
+    var showDialog by remember { mutableStateOf(false) }
+
     var registeredEmail by remember { mutableStateOf("") }
     var registeredPassword by remember { mutableStateOf("") }
-    val context = LocalContext.current
-    var showDialog by remember { mutableStateOf(false) }
+
     val signUpLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -79,10 +92,11 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
             val data = result.data
             registeredEmail = data?.getStringExtra("registered_email") ?: ""
             registeredPassword = data?.getStringExtra("registered_password") ?: ""
+
+            viewModel.setRegisteredData(registeredEmail, registeredPassword)
             Toast.makeText(context, "회원가입 완료! 로그인 해주세요.", Toast.LENGTH_SHORT).show()
         }
     }
-    val prefManager = remember { PreferenceManager(context) }
 
     Box(
         modifier = modifier
@@ -126,7 +140,7 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
 
             TextField(
                 value = email,
-                onValueChange = { email = it },
+                onValueChange = { viewModel.updateEmail(it) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp)
@@ -156,7 +170,7 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
 
             TextField(
                 value = password,
-                onValueChange = { password = it },
+                onValueChange = { viewModel.updatePassword(it) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp)
@@ -192,16 +206,10 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
 
             Button(
                 onClick = {
-                    if (email.isNotEmpty() && email == registeredEmail && password == registeredPassword) {
-                        prefManager.setLoggedIn(true)
-                        val intent = Intent(context, MainActivity::class.java)
-                        context.startActivity(intent)
-                        (context as? Activity)?.finish()
-                    } else {
-                        Toast.makeText(context, "이메일 또는 비밀번호가 일치하지 않습니다.", Toast.LENGTH_SHORT)
-                            .show()
-                    }
-                },
+                     viewModel.login()
+
+                    } ,
+
                 enabled = email.isNotBlank() && password.isNotBlank(),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -242,11 +250,9 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
 }
 
 
-
 @Preview(showBackground = true)
 @Composable
 private fun LoginScreenPreview() {
     LETSSOPTTheme {
-        Greeting("Android")
     }
 }
