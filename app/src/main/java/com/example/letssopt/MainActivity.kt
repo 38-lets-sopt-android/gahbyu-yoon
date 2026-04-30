@@ -68,11 +68,6 @@ class MainActivity : ComponentActivity() {
                         MainScreen()
                     }
                 }
-//                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-//                    MainScreen(
-//                        modifier = Modifier.padding(innerPadding)
-//                    )
-//                }
             }
         }
     }
