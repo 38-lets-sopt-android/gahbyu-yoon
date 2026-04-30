@@ -32,14 +32,47 @@ import com.example.letssopt.ui.theme.LETSSOPTTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val prefManager = PreferenceManager(this)
+
         enableEdgeToEdge()
         setContent {
             LETSSOPTTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    MainScreen(
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                val rootNavController = rememberNavController()
+
+                NavHost(
+                    navController = rootNavController,
+                    startDestination = if (prefManager.isLoggedIn()) "main" else "login"
+                ){
+                    composable("login"){
+                        LoginScreen(
+                            prefManager = prefManager,
+                            onNavigateToSignUp = {
+                                rootNavController.navigate("signup")
+                            },
+                            onLoginSuccess =  {
+                                rootNavController.navigate("main"){
+                                    popUpTo("login"){ inclusive = true }
+                                }
+                            }
+                        )
+                    }
+                    composable("signup"){
+                        SignUpScreen(
+                            onSignUpSuccess = {
+                                rootNavController.popBackStack()
+                            }
+                        )
+                    }
+                    composable ("main"){
+                        MainScreen()
+                    }
                 }
+//                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+//                    MainScreen(
+//                        modifier = Modifier.padding(innerPadding)
+//                    )
+//                }
             }
         }
     }
@@ -47,17 +80,17 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MainScreen( modifier: Modifier = Modifier ) {
-    val navController = rememberNavController()
+    val bottomNavController = rememberNavController()
 
     Scaffold(
         modifier = modifier,
         containerColor = Color(0xFF141414),
         bottomBar = {
-            BottomNavigationBar(navController)
+            BottomNavigationBar(bottomNavController)
         }
     ) { innerPadding ->
         NavHost(
-            navController = navController,
+            navController = bottomNavController,
             startDestination = BottomNavItem.Main.route,
             modifier = Modifier.padding(innerPadding)
         ) {

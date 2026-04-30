@@ -67,3 +67,9 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.1")
     implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.5")
 }
+
+configurations {
+    all {
+        exclude(group = "com.google.guava", module = "listenablefuture")
+    }
+}
