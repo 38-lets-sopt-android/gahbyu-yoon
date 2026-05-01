@@ -1,8 +1,11 @@
 package com.example.letssopt
 
 class AuthRepository {
-    private var registeredEmail = ""
-    private var registeredPassword = ""
+
+    companion object {
+        private var registeredEmail = ""
+        private var registeredPassword = ""
+    }
 
     fun signUp(email: String, pw: String): Boolean {
         registeredEmail = email
