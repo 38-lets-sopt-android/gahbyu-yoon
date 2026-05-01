@@ -186,8 +186,6 @@ fun SignUpScreen(
             Button(
                 onClick = {
                     viewModel.signUp()
-                    onSignUpSuccess()
-
                 },
                 enabled = viewModel.isSignUpValid(),
                 modifier = Modifier
