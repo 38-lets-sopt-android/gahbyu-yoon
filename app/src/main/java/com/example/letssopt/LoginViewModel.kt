@@ -14,7 +14,9 @@ sealed class LoginEvent {
     data class ShowToast(val message: String) : LoginEvent()
 }
 
-class LoginViewModel : ViewModel() {
+class LoginViewModel(
+    private val authRepository: AuthRepository = AuthRepository()
+) : ViewModel() {
 
 
     private val _email = mutableStateOf("")
@@ -22,10 +24,6 @@ class LoginViewModel : ViewModel() {
 
     private val _password = mutableStateOf("")
     val password: State<String> = _password
-
-
-    private var registeredEmail = ""
-    private var registeredPassword = ""
 
 
     private val _loginEvent = MutableSharedFlow<LoginEvent>()
@@ -36,14 +34,11 @@ class LoginViewModel : ViewModel() {
     fun updatePassword(input: String) { _password.value = input }
 
 
-    fun setRegisteredData(email: String, pw: String) {
-        registeredEmail = email
-        registeredPassword = pw
-    }
-
 
     fun login() {
-        if (_email.value.isNotEmpty() && _email.value == registeredEmail && _password.value == registeredPassword) {
+
+        val isSuccess = authRepository.login(_email.value, _password.value)
+        if (isSuccess) {
             viewModelScope.launch {
                 _loginEvent.emit(LoginEvent.LoginSuccess)
             }
