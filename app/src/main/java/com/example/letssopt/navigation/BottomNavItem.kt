@@ -1,17 +1,11 @@
 package com.example.letssopt.navigation
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Folder
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.ui.graphics.vector.ImageVector
+import com.example.letssopt.R
 
-sealed class BottomNavItem(val route: String, val label: String, val icon: ImageVector) {
-    object Main : BottomNavItem("main", "메인", Icons.Default.Home)
-    object Purchase : BottomNavItem("purchase", "개별구매", Icons.Default.ShoppingCart)
-    object Webtoon : BottomNavItem("webtoon", "웹툰", Icons.Default.List)
-    object Search : BottomNavItem("search", "찾기", Icons.Default.Search)
-    object Library : BottomNavItem("library", "보관함", Icons.Default.Folder)
+sealed class BottomNavItem(val route: String, val label: String, val iconRes: Int) {
+    object Main : BottomNavItem("main", "메인", R.drawable.ic_bottom_bar_main_24)
+    object Purchase : BottomNavItem("purchase", "개별구매", R.drawable.ic_bottom_bar_category_24)
+    object Webtoon : BottomNavItem("webtoon", "웹툰", R.drawable.ic_bottom_bar_wallet_24)
+    object Search : BottomNavItem("search", "찾기", R.drawable.ic_bottom_search_24)
+    object Library : BottomNavItem("library", "보관함", R.drawable.ic_bottom_bar_folder_24)
 }
