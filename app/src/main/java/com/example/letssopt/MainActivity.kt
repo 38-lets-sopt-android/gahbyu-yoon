@@ -98,6 +98,7 @@ fun MainScreen( modifier: Modifier = Modifier ) {
             composable(BottomNavItem.Library.route) { LibraryScreen() }
         }
     }
+
 }
 
 @Composable
