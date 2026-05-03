@@ -1,47 +1,32 @@
 package com.example.letssopt
 
-import android.R.attr.text
-import android.app.Activity
-import android.content.Intent
-import android.graphics.Color.red
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import com.example.letssopt.navigation.BottomNavItem
+import com.example.letssopt.screen.home.HomeScreen
+import com.example.letssopt.screen.library.LibraryScreen
 import com.example.letssopt.ui.theme.LETSSOPTTheme
 
 class MainActivity : ComponentActivity() {
@@ -51,8 +36,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             LETSSOPTTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
+                    MainScreen(
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
@@ -62,182 +46,75 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var registeredEmail by remember { mutableStateOf("") }
-    var registeredPassword by remember { mutableStateOf("") }
-    val context = LocalContext.current
-    var showDialog by remember { mutableStateOf(false) }
-    val signUpLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val data = result.data
-            registeredEmail = data?.getStringExtra("registered_email") ?: ""
-            registeredPassword = data?.getStringExtra("registered_password") ?: ""
-            Toast.makeText(context, "회원가입 완료! 로그인 해주세요.", Toast.LENGTH_SHORT).show()
+fun MainScreen( modifier: Modifier = Modifier ) {
+    val navController = rememberNavController()
+
+    Scaffold(
+        modifier = modifier,
+        containerColor = Color(0xFF141414),
+        bottomBar = {
+            BottomNavigationBar(navController)
         }
-    }
-
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(Color(0xFF141414))
-    ) {
-
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
+    ) { innerPadding ->
+        NavHost(
+            navController = navController,
+            startDestination = BottomNavItem.Main.route,
+            modifier = Modifier.padding(innerPadding)
         ) {
-
-            Text(
-                text = "watcha",
-                color = Color(0xFFE8003C),
-                fontSize = 36.sp,
-                fontWeight = FontWeight(700),
-                modifier = Modifier.padding(top = 60.dp)
-            )
-
-
-            Text(
-                text = "이메일로 로그인",
-                fontSize = 20.sp,
-                fontWeight = FontWeight(700),
-                color = Color(0xFFFFFFFF),
-                modifier = Modifier
-                    .align(Alignment.Start)
-                    .padding(start = 20.dp, top = 30.dp)
-            )
-
-            Text(
-                text = "이메일",
-                fontSize = 14.sp,
-                fontWeight = FontWeight(400),
-                color = Color(0xFF999999),
-                modifier = Modifier
-                    .align(Alignment.Start)
-                    .padding(start = 20.dp, top = 60.dp)
-            )
-
-            TextField(
-                value = email,
-                onValueChange = { email = it },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp)
-                    .height(52.dp),
-                label = { Text("이메일 주소를 입력하세요") },
-                placeholder = { Text("이메일") },
-                singleLine = true,
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color(0xFF2A2A2A),
-                    unfocusedContainerColor = Color(0xFF2A2A2A),
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White
-                )
-            )
-
-            Spacer(modifier = Modifier.height(30.dp))
-
-            Text(
-                text = "비밀번호",
-                fontSize = 14.sp,
-                fontWeight = FontWeight(400),
-                color = Color(0xFF999999),
-                modifier = Modifier
-                    .align(Alignment.Start)
-                    .padding(start = 20.dp)
-            )
-
-            TextField(
-                value = password,
-                onValueChange = { password = it },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp)
-                    .height(52.dp),
-                label = { Text("비밀번호를 입력하세요") },
-                placeholder = { Text("비밀번호") },
-                singleLine = true,
-                visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color(0xFF2A2A2A),
-                    unfocusedContainerColor = Color(0xFF2A2A2A),
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White
-                )
-            )
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            Text(
-                text = "아직 계정이 없으신가요? 회원가입",
-                fontSize = 14.sp,
-                fontWeight = FontWeight(400),
-                color = Color(0xFF999999),
-                modifier = Modifier
-                    .clickable {
-                        val intent = Intent(context, SignUpActivity::class.java)
-                        signUpLauncher.launch(intent)
-
-                    }
-                    .padding(bottom = 10.dp)
-            )
-
-
-            Button(
-                onClick = {
-                    if (email.isNotEmpty() && email == registeredEmail && password == registeredPassword) {
-                        showDialog = true
-                    } else {
-                        Toast.makeText(context, "이메일 또는 비밀번호가 일치하지 않습니다.", Toast.LENGTH_SHORT)
-                            .show()
-                    }
-                },
-                enabled = email.isNotBlank() && password.isNotBlank(),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp)
-                    .padding(bottom = 20.dp)
-                    .height(52.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFE8003C),
-                    contentColor = Color(0xFFFFFFFF),
-                    disabledContainerColor = Color(0xFF333333),
-                    disabledContentColor = Color(0xFF666666)
-                )
-            ) {
-                Text(text = "로그인")
+            composable(BottomNavItem.Main.route) {
+                HomeScreen()
             }
-        }
-
-        if (showDialog) {
-            Dialog(
-                onDismissRequest = { showDialog = false }
-            ) {
-                Column(
-                    modifier = Modifier
-                        .background(Color.White)
-                        .padding(20.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text("로그인 되었습니다!", modifier = Modifier.padding(bottom = 16.dp))
-                    Button(
-                        onClick = { showDialog = false }
-                    ) {
-                        Text("확인")
-                    }
-                }
-            }
+            composable(BottomNavItem.Purchase.route) { TextScreen("개별구매 화면") }
+            composable(BottomNavItem.Webtoon.route) { TextScreen("웹툰 화면") }
+            composable(BottomNavItem.Search.route) { TextScreen("찾기 화면") }
+            composable(BottomNavItem.Library.route) { LibraryScreen() }
         }
     }
 }
 
-@Preview(showBackground = true)
 @Composable
-fun GreetingPreview() {
-    LETSSOPTTheme {
-        Greeting("Android")
+fun BottomNavigationBar(navController: NavHostController) {
+    val items = listOf(
+        BottomNavItem.Main,
+        BottomNavItem.Purchase,
+        BottomNavItem.Webtoon,
+        BottomNavItem.Search,
+        BottomNavItem.Library
+    )
+
+    NavigationBar {
+        val navBackStackEntry by navController.currentBackStackEntryAsState()
+        val currentRoute = navBackStackEntry?.destination?.route
+
+        items.forEach { item ->
+            NavigationBarItem(
+                icon = { Icon(item.icon, contentDescription = item.label) },
+                label = { Text(item.label) },
+                selected = currentRoute == item.route,
+                onClick = {
+                    navController.navigate(item.route) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
+            )
+        }
+    }
+}
+
+@Composable
+fun TextScreen(title: String) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Center
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.headlineMedium,
+            color = Color.White
+        )
     }
 }

@@ -5,10 +5,13 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -23,8 +26,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -33,26 +38,30 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.letssopt.ui.theme.LETSSOPTTheme
-import kotlinx.coroutines.flow.collectLatest
 
-class SignUpActivity : ComponentActivity() {
-
-    private val viewModel: SignUpViewModel by viewModels()
+class LoginActivity : ComponentActivity() {
+    private val viewModel: LoginViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val prefManager = PreferenceManager(this)
+
+        if (prefManager.isLoggedIn()) {
+            startActivity(Intent(this, MainActivity::class.java))
+            finish()
+            return
+        }
         enableEdgeToEdge()
         setContent {
             LETSSOPTTheme {
-                Scaffold(
-                    modifier = Modifier.fillMaxSize()
-                ) { innerPadding ->
-
-                    SignUpScreen(
+                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                    LoginScreen(
                         modifier = Modifier.padding(innerPadding),
-                        viewModel = viewModel
+                        viewModel = viewModel,
+                        prefManager = prefManager
                     )
                 }
             }
@@ -61,55 +70,39 @@ class SignUpActivity : ComponentActivity() {
 }
 
 @Composable
-fun SignUpScreen(
+fun LoginScreen(
     modifier: Modifier = Modifier,
-    viewModel: SignUpViewModel = viewModel()
+    viewModel: LoginViewModel = viewModel(),
+    prefManager: PreferenceManager
 ) {
-    val signUpEmail by viewModel.email
-    val signUpPassword by viewModel.password
-    val passwordcheck by viewModel.passwordCheck
     val context = LocalContext.current
-    val activity = context as? Activity
 
-    LaunchedEffect(Unit) {
-        viewModel.signUpEvent.collectLatest { event ->
-            when (event) {
-                is SignUpEvent.SignUpSuccess -> {
-                    val resultIntent = Intent().apply {
-                        putExtra(
-                            "registered_email",
-                            event.email
-                        )
-                        putExtra(
-                            "registered_password",
-                            event.password
-                        )
-                    }
-                    activity?.setResult(
-                        Activity.RESULT_OK,
-                        resultIntent
-                    )
-                    activity?.finish()
-                }
+    val email by viewModel.email
+    val password by viewModel.password
 
-                is SignUpEvent.ShowToast -> {
-                    Toast.makeText(
-                        context,
-                        event.message, Toast.LENGTH_SHORT
-                    ).show()
-                }
-            }
+    var showDialog by remember { mutableStateOf(false) }
+
+    var registeredEmail by remember { mutableStateOf("") }
+    var registeredPassword by remember { mutableStateOf("") }
+
+    val signUpLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val data = result.data
+            registeredEmail = data?.getStringExtra("registered_email") ?: ""
+            registeredPassword = data?.getStringExtra("registered_password") ?: ""
+
+            viewModel.setRegisteredData(registeredEmail, registeredPassword)
+            Toast.makeText(context, "회원가입 완료! 로그인 해주세요.", Toast.LENGTH_SHORT).show()
         }
     }
-
-
 
     Box(
         modifier = modifier
             .fillMaxSize()
             .background(Color(0xFF141414))
-    )
-    {
+    ) {
 
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -124,8 +117,9 @@ fun SignUpScreen(
                 modifier = Modifier.padding(top = 60.dp)
             )
 
+
             Text(
-                text = "회원가입",
+                text = "이메일로 로그인",
                 fontSize = 20.sp,
                 fontWeight = FontWeight(700),
                 color = Color(0xFFFFFFFF),
@@ -145,7 +139,7 @@ fun SignUpScreen(
             )
 
             TextField(
-                value = signUpEmail,
+                value = email,
                 onValueChange = { viewModel.updateEmail(it) },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -175,12 +169,8 @@ fun SignUpScreen(
             )
 
             TextField(
-                value = signUpPassword,
-                onValueChange = {
-                    if (it.length <= 12) {
-                        viewModel.updatePassword(it)
-                    }
-                },
+                value = password,
+                onValueChange = { viewModel.updatePassword(it) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp)
@@ -188,40 +178,7 @@ fun SignUpScreen(
                 label = { Text("비밀번호를 입력하세요") },
                 placeholder = { Text("비밀번호") },
                 singleLine = true,
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color(0xFF2A2A2A),
-                    unfocusedContainerColor = Color(0xFF2A2A2A),
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White
-                )
-            )
-
-            Spacer(modifier = Modifier.height(30.dp))
-
-            Text(
-                text = "비밀번호 확인",
-                fontSize = 14.sp,
-                fontWeight = FontWeight(400),
-                color = Color(0xFF999999),
-                modifier = Modifier
-                    .align(Alignment.Start)
-                    .padding(start = 20.dp)
-            )
-
-            TextField(
-                value = passwordcheck,
-                onValueChange = {
-                    if (it.length <= 12) {
-                        viewModel.updatePasswordCheck(it)
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp)
-                    .height(52.dp),
-                label = { Text("비밀번호를 다시 입력하세요") },
-                placeholder = { Text("비밀번호 재입력") },
-                singleLine = true,
+                visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color(0xFF2A2A2A),
                     unfocusedContainerColor = Color(0xFF2A2A2A),
@@ -232,11 +189,28 @@ fun SignUpScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
+            Text(
+                text = "아직 계정이 없으신가요? 회원가입",
+                fontSize = 14.sp,
+                fontWeight = FontWeight(400),
+                color = Color(0xFF999999),
+                modifier = Modifier
+                    .clickable {
+                        val intent = Intent(context, SignUpActivity::class.java)
+                        signUpLauncher.launch(intent)
+
+                    }
+                    .padding(bottom = 10.dp)
+            )
+
+
             Button(
                 onClick = {
-                    viewModel.signUp()
-                },
-                enabled = viewModel.isSignUpValid(),
+                     viewModel.login()
+
+                    } ,
+
+                enabled = email.isNotBlank() && password.isNotBlank(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp)
@@ -248,20 +222,37 @@ fun SignUpScreen(
                     disabledContainerColor = Color(0xFF333333),
                     disabledContentColor = Color(0xFF666666)
                 )
-            )
-            {
-                Text(text = "회원가입")
+            ) {
+                Text(text = "로그인")
             }
         }
 
-
+        if (showDialog) {
+            Dialog(
+                onDismissRequest = { showDialog = false }
+            ) {
+                Column(
+                    modifier = Modifier
+                        .background(Color.White)
+                        .padding(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text("로그인 되었습니다!", modifier = Modifier.padding(bottom = 16.dp))
+                    Button(
+                        onClick = { showDialog = false }
+                    ) {
+                        Text("확인")
+                    }
+                }
+            }
+        }
     }
 }
 
 
 @Preview(showBackground = true)
 @Composable
-fun SignUpActivityPreview() {
+private fun LoginScreenPreview() {
     LETSSOPTTheme {
     }
 }
