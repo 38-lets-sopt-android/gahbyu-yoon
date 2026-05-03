@@ -1,13 +1,7 @@
 package com.example.letssopt
 
 import android.app.Activity
-import android.content.Intent
-import android.os.Bundle
 import android.widget.Toast
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,7 +12,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -35,35 +28,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.letssopt.ui.theme.LETSSOPTTheme
-import kotlinx.coroutines.flow.collectLatest
 
-class SignUpActivity : ComponentActivity() {
-
-    private val viewModel: SignUpViewModel by viewModels()
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContent {
-            LETSSOPTTheme {
-                Scaffold(
-                    modifier = Modifier.fillMaxSize()
-                ) { innerPadding ->
-
-                    SignUpScreen(
-                        modifier = Modifier.padding(innerPadding),
-                        viewModel = viewModel
-                    )
-                }
-            }
-        }
-    }
-}
 
 @Composable
 fun SignUpScreen(
     modifier: Modifier = Modifier,
-    viewModel: SignUpViewModel = viewModel()
+    viewModel: SignUpViewModel = viewModel(),
+    onSignUpSuccess: () -> Unit,
 ) {
     val signUpEmail by viewModel.email
     val signUpPassword by viewModel.password
@@ -72,37 +43,17 @@ fun SignUpScreen(
     val activity = context as? Activity
 
     LaunchedEffect(Unit) {
-        viewModel.signUpEvent.collectLatest { event ->
+        viewModel.signUpEvent.collect { event ->
             when (event) {
                 is SignUpEvent.SignUpSuccess -> {
-                    val resultIntent = Intent().apply {
-                        putExtra(
-                            "registered_email",
-                            event.email
-                        )
-                        putExtra(
-                            "registered_password",
-                            event.password
-                        )
-                    }
-                    activity?.setResult(
-                        Activity.RESULT_OK,
-                        resultIntent
-                    )
-                    activity?.finish()
+                    onSignUpSuccess()
                 }
-
                 is SignUpEvent.ShowToast -> {
-                    Toast.makeText(
-                        context,
-                        event.message, Toast.LENGTH_SHORT
-                    ).show()
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
                 }
             }
         }
     }
-
-
 
     Box(
         modifier = modifier

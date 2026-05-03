@@ -14,7 +14,9 @@ sealed class SignUpEvent {
     data class ShowToast(val message: String) : SignUpEvent()
 }
 
-class SignUpViewModel : ViewModel() {
+class SignUpViewModel(
+    private val authRepository: AuthRepository = AuthRepository()
+) : ViewModel() {
 
 
     private val _email = mutableStateOf("")
@@ -60,6 +62,8 @@ class SignUpViewModel : ViewModel() {
 
     fun signUp() {
         if (_password.value == _passwordCheck.value) {
+
+            authRepository.signUp(_email.value, _password.value)
 
             viewModelScope.launch {
                 _signUpEvent.emit(

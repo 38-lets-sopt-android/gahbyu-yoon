@@ -18,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -32,13 +33,41 @@ import com.example.letssopt.ui.theme.LETSSOPTTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val prefManager = PreferenceManager(this)
+
         enableEdgeToEdge()
         setContent {
             LETSSOPTTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    MainScreen(
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                val rootNavController = rememberNavController()
+
+                NavHost(
+                    navController = rootNavController,
+                    startDestination = if (prefManager.isLoggedIn()) "main" else "login"
+                ){
+                    composable("login"){
+                        LoginScreen(
+                            prefManager = prefManager,
+                            onNavigateToSignUp = {
+                                rootNavController.navigate("signup")
+                            },
+                            onLoginSuccess =  {
+                                rootNavController.navigate("main"){
+                                    popUpTo("login"){ inclusive = true }
+                                }
+                            }
+                        )
+                    }
+                    composable("signup"){
+                        SignUpScreen(
+                            onSignUpSuccess = {
+                                rootNavController.popBackStack()
+                            }
+                        )
+                    }
+                    composable ("main"){
+                        MainScreen()
+                    }
                 }
             }
         }
@@ -47,17 +76,17 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MainScreen( modifier: Modifier = Modifier ) {
-    val navController = rememberNavController()
+    val bottomNavController = rememberNavController()
 
     Scaffold(
         modifier = modifier,
         containerColor = Color(0xFF141414),
         bottomBar = {
-            BottomNavigationBar(navController)
+            BottomNavigationBar(bottomNavController)
         }
     ) { innerPadding ->
         NavHost(
-            navController = navController,
+            navController = bottomNavController,
             startDestination = BottomNavItem.Main.route,
             modifier = Modifier.padding(innerPadding)
         ) {
@@ -70,6 +99,7 @@ fun MainScreen( modifier: Modifier = Modifier ) {
             composable(BottomNavItem.Library.route) { LibraryScreen() }
         }
     }
+
 }
 
 @Composable
@@ -88,7 +118,7 @@ fun BottomNavigationBar(navController: NavHostController) {
 
         items.forEach { item ->
             NavigationBarItem(
-                icon = { Icon(item.icon, contentDescription = item.label) },
+                icon = { Icon(painter = painterResource(id = item.iconRes), contentDescription = item.label) },
                 label = { Text(item.label) },
                 selected = currentRoute == item.route,
                 onClick = {

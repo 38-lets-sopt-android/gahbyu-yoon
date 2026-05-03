@@ -1,15 +1,6 @@
 package com.example.letssopt
 
-import android.app.Activity
-import android.content.Intent
-import android.os.Bundle
 import android.widget.Toast
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -21,11 +12,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,37 +33,13 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.letssopt.ui.theme.LETSSOPTTheme
 
-class LoginActivity : ComponentActivity() {
-    private val viewModel: LoginViewModel by viewModels()
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        val prefManager = PreferenceManager(this)
-
-        if (prefManager.isLoggedIn()) {
-            startActivity(Intent(this, MainActivity::class.java))
-            finish()
-            return
-        }
-        enableEdgeToEdge()
-        setContent {
-            LETSSOPTTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    LoginScreen(
-                        modifier = Modifier.padding(innerPadding),
-                        viewModel = viewModel,
-                        prefManager = prefManager
-                    )
-                }
-            }
-        }
-    }
-}
 
 @Composable
 fun LoginScreen(
     modifier: Modifier = Modifier,
     viewModel: LoginViewModel = viewModel(),
+    onNavigateToSignUp: () -> Unit,
+    onLoginSuccess: () -> Unit,
     prefManager: PreferenceManager
 ) {
     val context = LocalContext.current
@@ -85,18 +52,20 @@ fun LoginScreen(
     var registeredEmail by remember { mutableStateOf("") }
     var registeredPassword by remember { mutableStateOf("") }
 
-    val signUpLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val data = result.data
-            registeredEmail = data?.getStringExtra("registered_email") ?: ""
-            registeredPassword = data?.getStringExtra("registered_password") ?: ""
+    LaunchedEffect(Unit) {
+        viewModel.loginEvent.collect { event ->
+            when (event) {
+                is LoginEvent.LoginSuccess -> {
+                    onLoginSuccess()
+                }
 
-            viewModel.setRegisteredData(registeredEmail, registeredPassword)
-            Toast.makeText(context, "회원가입 완료! 로그인 해주세요.", Toast.LENGTH_SHORT).show()
+                is LoginEvent.ShowToast -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                }
+            }
         }
     }
+
 
     Box(
         modifier = modifier
@@ -196,9 +165,7 @@ fun LoginScreen(
                 color = Color(0xFF999999),
                 modifier = Modifier
                     .clickable {
-                        val intent = Intent(context, SignUpActivity::class.java)
-                        signUpLauncher.launch(intent)
-
+                        onNavigateToSignUp()
                     }
                     .padding(bottom = 10.dp)
             )
@@ -207,7 +174,6 @@ fun LoginScreen(
             Button(
                 onClick = {
                      viewModel.login()
-
                     } ,
 
                 enabled = email.isNotBlank() && password.isNotBlank(),
