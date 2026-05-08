@@ -1,83 +1,55 @@
 package com.example.letssopt
 
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
+import com.example.letssopt.dto.SignUpRequest
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 
-sealed class SignUpEvent {
-    data class SignUpSuccess(val email: String, val password: String) : SignUpEvent()
-    data class ShowToast(val message: String) : SignUpEvent()
+sealed class SignUpUiState {
+    object Idle : SignUpUiState()
+    object Loading : SignUpUiState()
+    object Success : SignUpUiState()
+    data class Error(val message: String) : SignUpUiState()
 }
 
-class SignUpViewModel(
-    private val authRepository: AuthRepository = AuthRepository()
-) : ViewModel() {
+class SignUpViewModel : ViewModel() {
 
 
-    private val _email = mutableStateOf("")
-    val email: State<String> = _email
-
-    private val _password = mutableStateOf("")
-    val password: State<String> = _password
-
-    private val _passwordCheck = mutableStateOf("")
-    val passwordCheck: State<String> = _passwordCheck
-
-
-    private val _signUpEvent = MutableSharedFlow<SignUpEvent>()
-    val signUpEvent = _signUpEvent.asSharedFlow()
-
-
-    fun updateEmail(input: String) {
-        _email.value = input
-    }
-
-    fun updatePassword(input: String) {
-        if (input.length <= 12) {
-            _password.value = input
-        }
-    }
-
-    fun updatePasswordCheck(input: String) {
-        if (input.length <= 12) {
-            _passwordCheck.value = input
-        }
+    private val _uiState = MutableStateFlow<SignUpUiState>(SignUpUiState.Idle)
+    val uiState: StateFlow<SignUpUiState> = _uiState.asStateFlow()
+    fun resetState() {
+        _uiState.value = SignUpUiState.Idle
     }
 
 
-    fun isSignUpValid(): Boolean {
-        return _email.value.isNotBlank() &&
-                _password.value.isNotBlank() &&
-                _passwordCheck.value.isNotBlank() &&
-                android.util.Patterns.EMAIL_ADDRESS.matcher(_email.value).matches() &&
-                _password.value.length >= 8 &&
-                _passwordCheck.value.length >= 8
-    }
+    fun signUp(
+        loginId: String,
+        password: String,
+        passwordcheck: String,
+        name: String,
+        email: String,
+        age: Int,
+        part: String
+    ) = viewModelScope.launch {
+        _uiState.value = SignUpUiState.Loading
 
-
-    fun signUp() {
-        if (_password.value == _passwordCheck.value) {
-
-            authRepository.signUp(_email.value, _password.value)
-
-            viewModelScope.launch {
-                _signUpEvent.emit(
-                    SignUpEvent.SignUpSuccess(
-                        _email.value,
-                        _password.value
-                    )
-                )
+        runCatching {
+            RetrofitClient.apiService.signUp(
+                SignUpRequest(loginId, password, name, email, age, part)
+            )
+        }.onSuccess { response ->
+            if (response.isSuccessful) {
+                _uiState.value = SignUpUiState.Success
+            } else {
+                val message = response.body()?.message ?: "회원가입에 실패했습니다"
+                _uiState.value = SignUpUiState.Error(message)
             }
-        } else {
-
-            viewModelScope.launch {
-                _signUpEvent.emit(SignUpEvent.ShowToast("비밀번호가 일치하지 않습니다."))
-            }
+        }.onFailure { e ->
+            _uiState.value = SignUpUiState.Error(e.message ?: "네트워크 오류가 발생했습니다")
         }
     }
 }
