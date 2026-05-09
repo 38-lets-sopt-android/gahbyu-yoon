@@ -113,7 +113,9 @@ fun BottomNavigationBar(navController: NavHostController) {
         BottomNavItem.Library
     )
 
-    NavigationBar {
+    NavigationBar(
+        containerColor = Color(0xFF141414)
+    ) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
 
