@@ -1,5 +1,6 @@
 package com.example.letssopt
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -19,9 +20,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -43,22 +41,29 @@ fun SignUpScreen(
     onSignUpSuccess: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    val loginId by viewModel.loginId.collectAsState()
+    val password by viewModel.password.collectAsState()
+    val passwordCheck by viewModel.passwordCheck.collectAsState()
+    val name by viewModel.name.collectAsState()
+    val email by viewModel.email.collectAsState()
+    val age by viewModel.age.collectAsState()
+    val part by viewModel.part.collectAsState()
+
     val context = LocalContext.current
-
-    var loginId by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var passwordCheck by remember { mutableStateOf("") }
-    var name by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var age by remember { mutableStateOf("") }
-    var part by remember { mutableStateOf("안드로이드") }
-
     val scrollState = rememberScrollState()
 
     LaunchedEffect(uiState) {
-        if (uiState is SignUpUiState.Success) {
-            onSignUpSuccess()
-            viewModel.resetState()
+        when (val state = uiState) {
+            is SignUpUiState.Success -> {
+                onSignUpSuccess()
+                viewModel.resetState()
+            }
+            is SignUpUiState.Error -> {
+                Toast.makeText(context, state.message, Toast.LENGTH_SHORT).show()
+                viewModel.resetState()
+            }
+            else -> {}
         }
     }
 
@@ -101,7 +106,7 @@ fun SignUpScreen(
 
         OutlinedTextField(
             value = loginId,
-            onValueChange = { loginId = it },
+            onValueChange = { viewModel.updateLoginId(it) },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp)
@@ -131,7 +136,7 @@ fun SignUpScreen(
 
         OutlinedTextField(
             value = password,
-            onValueChange = { password = it },
+            onValueChange = { viewModel.updatePassword(it) },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp)
@@ -147,7 +152,6 @@ fun SignUpScreen(
             )
         )
 
-
         Spacer(modifier = Modifier.height(30.dp))
 
         Text(
@@ -162,7 +166,7 @@ fun SignUpScreen(
 
         OutlinedTextField(
             value = passwordCheck,
-            onValueChange = { passwordCheck = it },
+            onValueChange = { viewModel.updatePasswordCheck(it) },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp)
@@ -192,7 +196,7 @@ fun SignUpScreen(
 
         OutlinedTextField(
             value = name,
-            onValueChange = { name = it },
+            onValueChange = { viewModel.updateName(it) },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp)
@@ -222,7 +226,7 @@ fun SignUpScreen(
 
         OutlinedTextField(
             value = email,
-            onValueChange = { email = it },
+            onValueChange = { viewModel.updateEmail(it) },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp)
@@ -252,7 +256,7 @@ fun SignUpScreen(
 
         OutlinedTextField(
             value = age,
-            onValueChange = { age = it },
+            onValueChange = { viewModel.updateAge(it) },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp)
@@ -282,7 +286,7 @@ fun SignUpScreen(
 
         OutlinedTextField(
             value = part,
-            onValueChange = { part = it },
+            onValueChange = { viewModel.updatePart(it) },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp)
@@ -305,17 +309,7 @@ fun SignUpScreen(
             CircularProgressIndicator()
         } else {
             Button(
-                onClick = {
-                    viewModel.signUp(
-                        loginId,
-                        password,
-                        passwordCheck,
-                        name,
-                        email,
-                        age.toInt(),
-                        part
-                    )
-                },
+                onClick = { viewModel.signUp() },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp)
@@ -327,8 +321,7 @@ fun SignUpScreen(
                     disabledContainerColor = Color(0xFF333333),
                     disabledContentColor = Color(0xFF666666)
                 ),
-                enabled = loginId.isNotBlank() && password.isNotBlank() && passwordCheck.isNotBlank() &&
-                        name.isNotBlank() && email.isNotBlank() && age.isNotBlank()
+                enabled = viewModel.isSignUpValid()
             ) {
                 Text("회원가입")
             }
@@ -336,10 +329,10 @@ fun SignUpScreen(
     }
 }
 
-
 @Preview(showBackground = true)
 @Composable
 fun SignUpActivityPreview() {
     LETSSOPTTheme {
+        SignUpScreen(onSignUpSuccess = {})
     }
 }

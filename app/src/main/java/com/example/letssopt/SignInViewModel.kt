@@ -19,20 +19,32 @@ sealed class SignInUiState {
 class SignInViewModel : ViewModel() {
     private val _uiState = MutableStateFlow<SignInUiState>(SignInUiState.Idle)
     val uiState: StateFlow<SignInUiState> = _uiState.asStateFlow()
+    val loginId = MutableStateFlow("")
+    val password = MutableStateFlow("")
+
+    fun updateLoginId(input: String) {
+        loginId.value = input
+    }
+
+    fun updatePassword(input: String) {
+        password.value = input
+    }
+
+    fun isSignInValid(): Boolean {
+        return loginId.value.isNotBlank() && password.value.isNotBlank()
+    }
+
     fun resetState() {
         _uiState.value = SignInUiState.Idle
     }
 
 
-    fun signIn(
-        loginId: String,
-        password: String
-    ) = viewModelScope.launch {
+    fun signIn() = viewModelScope.launch {
         _uiState.value = SignInUiState.Loading
 
         runCatching {
             RetrofitClient.apiService.signIn(
-                SignInRequest(loginId, password)
+                SignInRequest(loginId.value, password.value)
             )
         }.onSuccess { response ->
             if (response.isSuccessful) {
@@ -45,7 +57,7 @@ class SignInViewModel : ViewModel() {
             _uiState.value = SignInUiState.Error(e.message ?: "네트워크 오류가 발생했습니다")
         }
     }
-    }
+}
 
 
 

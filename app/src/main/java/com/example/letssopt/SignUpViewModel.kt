@@ -17,29 +17,72 @@ sealed class SignUpUiState {
 }
 
 class SignUpViewModel : ViewModel() {
-
-
     private val _uiState = MutableStateFlow<SignUpUiState>(SignUpUiState.Idle)
     val uiState: StateFlow<SignUpUiState> = _uiState.asStateFlow()
+    val loginId = MutableStateFlow("")
+    val password = MutableStateFlow("")
+    val passwordCheck = MutableStateFlow("")
+    val name = MutableStateFlow("")
+    val email = MutableStateFlow("")
+    val age = MutableStateFlow("")
+    val part = MutableStateFlow("안드로이드")
+
+    fun updateLoginId(input: String) {
+        loginId.value = input
+    }
+
+    fun updateName(input: String) {
+        name.value = input
+    }
+
+    fun updateEmail(input: String) {
+        email.value = input
+    }
+
+    fun updateAge(input: String) {
+        age.value = input.filter { it.isDigit() }
+    }
+
+    fun updatePart(input: String) {
+        part.value = input
+    }
+
+    fun updatePassword(input: String) {
+        if (input.length <= 12) password.value = input
+    }
+
+    fun updatePasswordCheck(input: String) {
+        if (input.length <= 12) passwordCheck.value = input
+    }
+
+    fun isSignUpValid(): Boolean {
+        return loginId.value.isNotBlank() &&
+                password.value.isNotBlank() &&
+                passwordCheck.value.isNotBlank() &&
+                name.value.isNotBlank() &&
+                email.value.isNotBlank() &&
+                age.value.isNotBlank() &&
+                password.value == passwordCheck.value
+    }
+
     fun resetState() {
         _uiState.value = SignUpUiState.Idle
     }
 
 
-    fun signUp(
-        loginId: String,
-        password: String,
-        passwordcheck: String,
-        name: String,
-        email: String,
-        age: Int,
-        part: String
-    ) = viewModelScope.launch {
+    fun signUp() = viewModelScope.launch {
         _uiState.value = SignUpUiState.Loading
 
         runCatching {
             RetrofitClient.apiService.signUp(
-                SignUpRequest(loginId, password, name, email, age, part)
+                SignUpRequest(
+                    loginId = loginId.value,
+                    password = password.value,
+                    name = name.value,
+                    email = email.value,
+                    age = age.value.toIntOrNull() ?: 0,
+                    part = part.value
+                )
             )
         }.onSuccess { response ->
             if (response.isSuccessful) {

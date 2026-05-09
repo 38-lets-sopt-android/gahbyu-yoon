@@ -1,5 +1,6 @@
 package com.example.letssopt
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -44,19 +45,28 @@ fun SignInScreen(
     prefManager: PreferenceManager
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    val loginId by viewModel.loginId.collectAsState()
+    val password by viewModel.password.collectAsState()
+
     val context = LocalContext.current
-
-    var loginId by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-
 
     var showDialog by remember { mutableStateOf(false) }
 
 
     LaunchedEffect(uiState) {
-        if (uiState is SignInUiState.Success) {
-            onSignInSuccess()
-            viewModel.resetState()
+        when (val state = uiState) {
+            is SignInUiState.Success -> {
+                onSignInSuccess()
+                viewModel.resetState()
+            }
+
+            is SignInUiState.Error -> {
+                Toast.makeText(context, state.message, Toast.LENGTH_SHORT).show()
+                viewModel.resetState()
+            }
+
+            else -> {}
         }
     }
 
@@ -99,7 +109,7 @@ fun SignInScreen(
 
         OutlinedTextField(
             value = loginId,
-            onValueChange = { loginId = it },
+            onValueChange = { viewModel.updateLoginId(it) },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp)
@@ -129,7 +139,7 @@ fun SignInScreen(
 
         OutlinedTextField(
             value = password,
-            onValueChange = { password = it },
+            onValueChange = { viewModel.updatePassword(it) },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp)
@@ -165,12 +175,7 @@ fun SignInScreen(
             CircularProgressIndicator()
         } else {
             Button(
-                onClick = {
-                    viewModel.signIn(
-                        loginId,
-                        password,
-                    )
-                },
+                onClick = { viewModel.signIn() },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp)
@@ -182,9 +187,9 @@ fun SignInScreen(
                     disabledContainerColor = Color(0xFF333333),
                     disabledContentColor = Color(0xFF666666)
                 ),
-                enabled = loginId.isNotBlank() && password.isNotBlank()
+                enabled = viewModel.isSignInValid()
             ) {
-                Text("회원가입")
+                Text("로그인")
             }
         }
     }
@@ -216,6 +221,10 @@ fun SignInScreen(
 @Composable
 private fun LoginScreenPreview() {
     LETSSOPTTheme {
-
+        SignInScreen(
+            onNavigateToSignUp = {},
+            onSignInSuccess = {},
+            prefManager = PreferenceManager(LocalContext.current)
+        )
     }
 }

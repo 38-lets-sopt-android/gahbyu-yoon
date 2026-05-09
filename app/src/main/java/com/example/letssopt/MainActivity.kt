@@ -46,12 +46,13 @@ class MainActivity : ComponentActivity() {
                     startDestination = if (prefManager.isLoggedIn()) "main" else "login"
                 ){
                     composable("login"){
-                        LoginScreen(
+                        SignInScreen(
                             prefManager = prefManager,
                             onNavigateToSignUp = {
                                 rootNavController.navigate("signup")
                             },
-                            onLoginSuccess =  {
+                            onSignInSuccess =  {
+                                prefManager.setLoggedIn(true)
                                 rootNavController.navigate("main"){
                                     popUpTo("login"){ inclusive = true }
                                 }

@@ -11,11 +11,15 @@ data class SignUpResponse(
     val status: Int,
     @SerialName("message")
     val message: String,
-    @SerialName("data")
+    @SerialName("code")
     val code: String
 )
 
-
+@Serializable
+data class SignInData(
+    @SerialName("userId")
+    val userId: Int
+)
 @Serializable
 data class SignInResponse(
     @SerialName("success")
@@ -27,5 +31,5 @@ data class SignInResponse(
     @SerialName("code")
     val code: String,
     @SerialName("data")
-    val data: Int
+    val data: SignInData
 )
