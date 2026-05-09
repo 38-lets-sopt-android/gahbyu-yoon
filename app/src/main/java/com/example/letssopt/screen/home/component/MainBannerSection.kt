@@ -18,7 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale.Companion.Crop
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.example.letssopt.R.drawable.main_banner
+import com.example.letssopt.R.drawable.img_main_banner
 
 @Composable
 fun MainBannerSection() {
@@ -46,7 +46,7 @@ fun MainBannerSection() {
         ) {
             Box(contentAlignment = Center) {
                 AsyncImage(
-                    model = main_banner,
+                    model = img_main_banner,
                     contentDescription = "배너 이미지",
                     modifier = Modifier.fillMaxSize(),
                     contentScale = Crop

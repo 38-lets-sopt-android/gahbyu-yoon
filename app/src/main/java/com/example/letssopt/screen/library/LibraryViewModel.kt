@@ -9,10 +9,10 @@ import kotlinx.coroutines.flow.asStateFlow
 class LibraryViewModel : ViewModel() {
     private val _myPhotos = MutableStateFlow(
         listOf(
-            R.drawable.love_,
-            R.drawable.stranger_5,
-            R.drawable.hail_,
-            R.drawable.love_
+            R.drawable.img_love_,
+            R.drawable.img_stranger_5,
+            R.drawable.img_hail_,
+            R.drawable.img_love_
         )
     )
 
